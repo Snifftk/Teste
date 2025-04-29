@@ -7,6 +7,7 @@ void main() {
   ));
 }
 
+// 🧾 Tela de Cadastro
 class CadastroUsuarioPage extends StatefulWidget {
   @override
   _CadastroUsuarioPageState createState() => _CadastroUsuarioPageState();
@@ -16,6 +17,7 @@ class _CadastroUsuarioPageState extends State<CadastroUsuarioPage> {
   final _formKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
+  final _idadeController = TextEditingController(); // Bônus: idade
   final _senhaController = TextEditingController();
   final _confirmarSenhaController = TextEditingController();
   bool _aceitaTermos = false;
@@ -23,10 +25,13 @@ class _CadastroUsuarioPageState extends State<CadastroUsuarioPage> {
   void _cadastrar() {
     if (_formKey.currentState!.validate()) {
       if (_aceitaTermos) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('📢 Cadastro realizado com sucesso, ${_nomeController.text}!'),
-            backgroundColor: Colors.green,
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ConfirmacaoScreen(
+              nome: _nomeController.text,
+              idade: _idadeController.text,
+            ),
           ),
         );
       } else {
@@ -44,6 +49,7 @@ class _CadastroUsuarioPageState extends State<CadastroUsuarioPage> {
     _formKey.currentState!.reset();
     _nomeController.clear();
     _emailController.clear();
+    _idadeController.clear();
     _senhaController.clear();
     _confirmarSenhaController.clear();
     setState(() {
@@ -59,21 +65,27 @@ class _CadastroUsuarioPageState extends State<CadastroUsuarioPage> {
 
   String? _validarEmail(String? value) {
     if (value == null || value.trim().isEmpty) return 'E-mail obrigatório';
-    if (!RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$').hasMatch(value)) return 'Formato de e-mail inválido';
+    if (!RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$').hasMatch(value)) return 'Formato inválido';
+    return null;
+  }
+
+  String? _validarIdade(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Idade obrigatória';
+    if (int.tryParse(value) == null || int.parse(value) <= 0) return 'Idade inválida';
     return null;
   }
 
   String? _validarSenha(String? value) {
     if (value == null || value.isEmpty) return 'Senha obrigatória';
     if (value.length < 6) return 'Mínimo de 6 caracteres';
-    if (!RegExp(r'[A-Z]').hasMatch(value)) return 'Deve conter uma letra maiúscula';
-    if (!RegExp(r'\d').hasMatch(value)) return 'Deve conter um número';
+    if (!RegExp(r'[A-Z]').hasMatch(value)) return 'Deve conter letra maiúscula';
+    if (!RegExp(r'\d').hasMatch(value)) return 'Deve conter número';
     return null;
   }
 
   String? _validarConfirmarSenha(String? value) {
     if (value == null || value.isEmpty) return 'Confirme sua senha';
-    if (value != _senhaController.text) return 'As senhas não coincidem';
+    if (value != _senhaController.text) return 'Senhas não coincidem';
     return null;
   }
 
@@ -95,8 +107,14 @@ class _CadastroUsuarioPageState extends State<CadastroUsuarioPage> {
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(labelText: 'E-mail'),
-                validator: _validarEmail,
                 keyboardType: TextInputType.emailAddress,
+                validator: _validarEmail,
+              ),
+              TextFormField(
+                controller: _idadeController,
+                decoration: InputDecoration(labelText: 'Idade'),
+                keyboardType: TextInputType.number,
+                validator: _validarIdade,
               ),
               TextFormField(
                 controller: _senhaController,
@@ -139,3 +157,44 @@ class _CadastroUsuarioPageState extends State<CadastroUsuarioPage> {
       ),
     );
   }
+}
+
+// ✅ Tela de Confirmação
+class ConfirmacaoScreen extends StatelessWidget {
+  final String nome;
+  final String idade;
+
+  const ConfirmacaoScreen({required this.nome, required this.idade, Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Confirmação')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '🎉 Usuário $nome cadastrado com sucesso!',
+                style: TextStyle(fontSize: 20),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 10),
+              Text('Idade: $idade anos', style: TextStyle(fontSize: 16)),
+              SizedBox(height: 30),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context); // Voltar para a tela anterior
+                },
+                icon: Icon(Icons.arrow_back),
+                label: Text('Voltar'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
